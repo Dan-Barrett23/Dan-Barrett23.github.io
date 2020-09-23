@@ -1,0 +1,108 @@
+
+---
+output: # rmarkdown::github_document
+  html_document:
+  pdf_document: default
+  word_document: default
+title: "Assignment 6: Visualization - Aesthetic Mapping"
+---
+
+***How to do it?***: 
+
+- Open the Rmarkdown file of this assignment ([link](fa2020_assignment6.Rmd)) in Rstudio. 
+
+- Right under each **question**, insert  a code chunk (you can use the hotkey `Ctrl + Alt + I` to add a code chunk) and code the solution for the question. 
+
+- `Knit` the rmarkdown file (hotkey: `Ctrl + Alt + K`) to export an html.  
+
+-  Publish the html file to your Github Page. 
+
+***Submission***: Submit the link on Github of the assignment to Blackboard.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE)
+```
+
+-------
+
+**Questions**
+
+Use the data of your own.  Produce the following types of plots and comment on each plot. Plots should be meaningful. If you use the data we used in class, make sure the plots are not the same as the ones in the slides. 
+```{r}
+library(tidyverse)
+df <- read_csv('titanic.csv')
+```
+
+-------
+
+1. For one continuous variable:
+
+- Density
+
+- Histogram 
+
+- Boxplot
+```{r}
+df %>% ggplot()+ geom_density(mapping = aes(x = Age), na.rm = TRUE)
+
+df %>% ggplot() + geom_histogram(mapping = aes(x=Fare))
+
+df %>% ggplot() + geom_boxplot(mapping = aes(y=Age), na.rm = TRUE)
+```
+
+The greatest portion of passengers were in their early 20's. The median age onboard was mid 20's. 
+
+-------
+
+2. For one categorical variable
+
+- Barplot
+```{r}
+df %>% ggplot() + geom_bar(mapping = aes(x = Sex))
+```
+
+The number of males was almost double the number of females onboard.
+
+-------
+
+3. For one two continuous variables
+
+- Scatter Plot
+
+- Line Plot
+
+- Smooth Plot
+```{r}
+df %>%  ggplot() + geom_point(mapping = aes(x=Age, y= Fare), na.rm = TRUE)
+
+df %>% ggplot() + geom_line(mapping = aes(x=Age, y= Fare), na.rm = TRUE)
+
+df %>%  ggplot() + geom_smooth(mapping= aes(x= Age, y = Fare), na.rm = TRUE)
+```
+
+The average fare price for the children on board was moderately priced and as the passenger got old they on average spent less on their ticket until the passenger was about 24. After the age of 24 the average ticket price rose and leveled off. 
+
+-------
+
+4. For one continuous + one categorical variables
+
+- Density
+
+- BoxPlot
+```{r}
+df %>% ggplot() + geom_density(mapping = aes(x= Fare, color = Sex), na.rm = TRUE)
+
+df %>% ggplot() + geom_boxplot(mapping = aes(x= Age, y= Sex), na.rm = TRUE)
+```
+
+The average age for men was slightly higher than the average woman's age. A large proportion of men spent very little on their ticket while a greater proportion of women carried higher priced tickets.
+
+-------
+
+5. For two categorical variables: barplot
+
+```{r}
+df %>% ggplot() + geom_bar(mapping = aes(x= Pclass, fill = Sex))
+```
+
+This chart shows the number of males & females in 1st and 2nd class were approx. even, however the number of men in 3rd class outwiegh any other group on the ship.
