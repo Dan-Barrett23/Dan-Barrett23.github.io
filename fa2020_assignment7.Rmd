@@ -30,28 +30,54 @@ knitr::opts_chunk$set(message = FALSE)
 Use the data of your own.  Produce the following types of plots and comment on each plot. Plots should be meaningful. If you use the data we used in class, make sure the plots are not the same as the ones in the slides. All plots should have title, caption, appropriate labels on x and y-axis. 
 
 -------
+```{r}
+library(ggplot2)
+library(tidyverse)
+df <- read_csv('titanic.csv')
+```
 
 1. Make a plot use `face_wrap` by one categorical variable (`face_wrap(~variable1)`)
 ```{r}
-
+ggplot(df, mapping=aes(x=Pclass)) + geom_histogram(bins=3) + facet_wrap(~Survived)
 ```
 
 2. Make a plot use `face_wrap` by two categorical variables (`face_wrap(variable1~variable2)`)
+```{r}
+ggplot(df, mapping=aes(x=Age, y=Fare)) + geom_smooth() + facet_wrap(Sex~Pclass)
+```
 
 3. Make a plot use `position ='jitter'`. 
+```{r}
+ggplot(df, mapping=aes(x=Age, y =Parch)) + geom_point(position = 'jitter')
+```
 
 4. Make a plot use `position ='dodge'`.
+```{r}
+ggplot(df, mapping=aes(x= Sex, fill=Embarked)) + geom_bar(position='dodge')
+```
 
 5. Make a plot use `position ='fill'`. 
+```{r}
+ggplot(df, mapping=aes(x= Sex, fill=Embarked)) + geom_bar(position='fill')
+```
 
 6. Make a plot use `geom_col`.
+```{r}
+df %>% group_by(Pclass) %>% summarise(mean_fare = mean(Fare)) %>% ggplot(df, mapping=aes(x=Pclass , y=mean_fare)) + geom_col()
+```
 
 7. Change the theme of one of your plots. 
+```{r}
+ggplot(df, mapping=aes(x=Age, y=Fare)) + geom_smooth() + facet_wrap(Sex~Pclass) + theme_minimal()
+```
 
 8. Save a plot and put a link of the plot to your Github Webpage.  To link a plot `abc.png` you just need to insert the following on the README.md
 
 ```{r, eval=FALSE}
 [Link to the plot](abc.png)
+```
+```{r}
+df %>% group_by(Pclass) %>% summarise(mean_fare = mean(Fare)) %>% ggplot(df, mapping=aes(x=Pclass , y=mean_fare)) + geom_col() + ggsave('abc.png')
 ```
 
 
