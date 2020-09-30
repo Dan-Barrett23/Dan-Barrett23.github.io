@@ -32,6 +32,12 @@ Use the data of your own.  Produce the following types of plots and comment on e
 -------
 
 1. Use the WHO's dataset at [this link](https://covid19.who.int/WHO-COVID-19-global-data.csv). Make a top-10 bar race by months between countries on the number of deaths by Covid 19.  
+```{r}
+library(tidyverse)
+library(ggplot2)
+read_csv('https://covid19.who.int/WHO-COVID-19-global-data.csv')
+
+```
 
 2. Make another bar race using that dataset.  
 
