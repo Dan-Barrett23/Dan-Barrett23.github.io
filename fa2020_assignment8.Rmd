@@ -34,12 +34,36 @@ Use the data of your own.  Produce the following types of plots and comment on e
 1. Use the WHO's dataset at [this link](https://covid19.who.int/WHO-COVID-19-global-data.csv). Make a top-10 bar race by months between countries on the number of deaths by Covid 19.  
 ```{r}
 library(tidyverse)
+library(lubridate)
 library(ggplot2)
-read_csv('https://covid19.who.int/WHO-COVID-19-global-data.csv')
+library(gganimate)
+library(gifski)
+df <- read_csv('https://covid19.who.int/WHO-COVID-19-global-data.csv')
 
+df$month <- month(df$Date_reported)
+d1 <- df %>% group_by(month, Country) %>% summarise(mean = mean(Cumulative_deaths))
+d2 <- d1 %>% group_by(month) %>% mutate(rank=rank(-mean)) %>% ungroup()
+d3 <- d2 %>% filter(rank <= 10)
+ggplot(d3, mapping = aes(x=rank, y=mean, fill =Country, group=Country, label=Country)) + geom_col() + transition_states(month)+ scale_x_reverse()+geom_text(aes(y=mean, label= Country)) + labs(title='Month {closest_state}', x = '', y = 'Number of Cumulative Deaths', fill='Country')
 ```
 
 2. Make another bar race using that dataset.  
+```{r}
+df$week <- week(df$Date_reported)
+d1 <- df %>% group_by(week, Country) %>% summarise(mean = mean(Cumulative_cases))
+d2 <- d1 %>% group_by(week) %>% mutate(rank=rank(-mean)) %>% ungroup()
+d3 <- d2 %>% filter(rank <= 5)
+ggplot(d3, mapping = aes(x=rank, y=mean, fill =Country, group=Country, label=Country)) + geom_col() + transition_states(week)+ scale_x_reverse()+geom_text(aes(y=mean, label= Country)) + labs(title = 'Week {closest_state}', x = 'Country', y = 'Number of Cumulative Cases', fill='Country')
+```
 
 3. Make a bar race using a dataset of your own interest. 
+```{r}
+df <- read_csv('Temp_Data.csv')
+df$year <- year(df$dt)
+d1 <- df %>% filter(year >= '1950')
+d2 <- d1 %>% group_by(City, year) %>% summarise(mean = mean(AverageTemperature))
+d3 <- d2 %>% group_by(year) %>% mutate(rank = rank(-mean)) %>% ungroup()
+d4 <- d3 %>% filter(rank<=5)
+ggplot(d4, mapping = aes(x=rank, y=mean, fill =City, group=City, label=City)) + geom_col() + transition_states(year)+ scale_x_reverse()+geom_text(aes(y=mean, label= City)) + labs(title = '{closest_state}', x = 'City', y = 'Annual Average Tempurature', fill='City')
+```
 
