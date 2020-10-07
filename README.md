@@ -17,3 +17,7 @@
 [Link to the plot](abc.png)
 
 [Assignment 8](Assignment-8.html)
+
+[Assignment 9](Assignment-9.html)
+
+[Assignment 10](Assignment-10.html)
