@@ -32,23 +32,74 @@ knitr::opts_chunk$set(message = FALSE)
 library(mlbench)
 data(PimaIndiansDiabetes)
 df <- PimaIndiansDiabetes
+names(df)[9] <- 'target'
+df$target <- factor(df$target)
 ```
 
 - Set seed to be 2020. 
 - Partition the data into 80% training and 20% testing.  
+```{r}
+library(caret)
+set.seed(2020)
+splitIndex <- createDataPartition(df$target, p = .80, 
+                                  list = FALSE)
+df_train <- df[ splitIndex,]
+df_test <- df[-splitIndex,]
+```
 
 -------
 
 2. Use cross-validation with 10 k-folds to find the maxdepth with the greatest accuracy. Plot the accuracy associated with different maxdepths against the maxdepths. The range to search for maxdepth is from 1 to 10. 
-
+```{r}
+tuneGrid = expand.grid(maxdepth = 1:10)
+trControl = trainControl(method ="cv",number =10)
+tree_approach2 <- train(target~., data=df_train,method ="rpart2",trControl =trControl, tuneGrid = tuneGrid)
+plot(tree_approach2)
+print(tree_approach2)
+```
 -------
 
 3. Make the final decision to select the maxdepth for your decision tree.  Is your selected maxdepth the same as the maxdepth found in 2. 
+```{r}
+library(rpart)
+library(rattle)
+tree3 <- rpart(target ~.,data = df_train,control=rpart.control(maxdepth=4))
+fancyRpartPlot(tree3)
+```
+
 
 -------
 
 4. Calculate the accuracy of your decision tree (the decision tree with your selected maxdepth in 3) on the test data. 
-
+```{r}
+library(e1071)
+pred <- predict(tree3, df_test, type = "class")
+cm <- confusionMatrix(data = pred, reference = df_test$target, positive = "pos")
+cm$overall[1]
+```
 -------
 
 5. Redo 2-4 with an alternative method to cross-validation. 
+```{r}
+tuneGrid = expand.grid(maxdepth = 1:10)
+trControl = trainControl(method ="LGOCV",number =10)
+tree_approach3 <- train(target~., data=df_train,method ="rpart2",trControl =trControl, tuneGrid = tuneGrid)
+plot(tree_approach3)
+print(tree_approach3)
+```
+
+```{r}
+tree1 <- rpart(target ~.,data = df_train,control=rpart.control(maxdepth=4))
+fancyRpartPlot(tree1)
+tree2 <- rpart(target ~.,data = df_train,control=rpart.control(maxdepth=6))
+fancyRpartPlot(tree2)
+```
+```{r}
+pred <- predict(tree1, df_test, type = "class")
+cm <- confusionMatrix(data = pred, reference = df_test$target, positive = "pos")
+cm$overall[1]
+pred <- predict(tree2, df_test, type = "class")
+cm <- confusionMatrix(data = pred, reference = df_test$target, positive = "pos")
+cm$overall[1]
+```
+
