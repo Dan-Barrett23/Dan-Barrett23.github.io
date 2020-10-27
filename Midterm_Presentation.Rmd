@@ -1,0 +1,117 @@
+---
+title: "Midterm Presentation"
+author: "Dan Barrett"
+date: "10/21/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## R Markdown
+
+This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(gganimate)
+library(gifski)
+df = read_csv('midterm.csv')
+```
+
+
+## Plot 1
+```{r, fig.height= 4, fig.width=6}
+df %>% ggplot() + geom_point(mapping=aes(x = age, y = los), na.rm = TRUE) + ggtitle("Length of Stay by Age scatterplot") + labs(y= 'Length of Stay in days', x = 'Age in Years')
+```
+
+## Plot 2
+```{r, fig.height= 4, fig.width=6}
+df %>% ggplot() + geom_smooth(mapping=aes(x=age, y =los), na.rm = TRUE)+ ggtitle("Average Length of Stay by Age") + labs(y= 'Length of Stay in days', x = 'Age in Years')
+```
+
+
+## Plot 3
+```{r, fig.height= 4, fig.width=6}
+df %>% ggplot() + geom_point(mapping=aes(x = age, y = tot), na.rm = TRUE)+ ggtitle("Cost of Stay by Age scatterplot") + labs(y= 'Cost of Stay in dollars', x = 'Age in Years')
+```
+
+## Plot 4
+```{r, fig.height= 4, fig.width=6}
+df %>% ggplot() + geom_smooth(mapping=aes(x = age, y = tot), na.rm = TRUE)+ ggtitle("Average Cost of Stay by Age") + labs(y= 'Cost of Stay in dollars', x = 'Age in Years')
+```
+
+
+
+## Plot 5
+```{r, fig.height= 4, fig.width=6}
+df %>% ggplot() + geom_bar(mapping=aes(x = raceethn, fill= raceethn), na.rm = TRUE)+ ggtitle("Number of Patients by Race") + labs(y= 'Number of Patients', x = 'Race as Coded')
+```
+
+
+## Plot 6
+```{r, fig.height= 4, fig.width=6}
+df %>% ggplot() + geom_bar(mapping=aes(x = provider), na.rm = TRUE)+ ggtitle("Number of Patients by Provider") + labs(y= 'Number of Patients', x = 'Provider Codes')
+```
+
+
+## Plot 7
+```{r, fig.height= 4, fig.width=6}
+df %>% ggplot() + geom_bar(mapping=aes(x = payer), na.rm = TRUE)+ ggtitle("Number of Patients by Payment Type") + labs(y= 'Number of Patients', x = 'Payment Type Codes')
+```
+
+## Plot 8
+```{r, fig.height= 4, fig.width=6}
+df %>% ggplot() + geom_bar(mapping=aes(x = provider, fill = payer), na.rm = TRUE)+ ggtitle("Number of Patients by Race") + labs(y= 'Number of Patients', x = 'Race as Coded')
+```
+
+
+## Plot 9
+```{r, fig.height= 4, fig.width=6}
+df %>% ggplot() + geom_smooth(mapping=aes(x = moa , y = tot), na.rm = TRUE)+ ggtitle("Average Cost of Stay by Month of Admission") + labs(y= 'Average Cost of Stay in dollars', x = 'Month of Admission')
+```
+
+
+
+
+## Plot 10
+```{r, fig.height= 4, fig.width=6}
+df %>% group_by(payer) %>% summarise(mean_los = mean(los)) %>% ggplot() + geom_col(mapping=aes(x = payer, y = mean_los), na.rm = TRUE)+ ggtitle("Average Length of Patient Stay by Payment Type") + labs(y= 'Average Length of Stay in days', x = 'Patient Payment Type Code')
+```
+
+
+## Plot 11 / Animation
+```{r, fig.height= 4, fig.width=3}
+df$provider <- factor(df$provider)
+df1 <- df %>% group_by(moa, provider) %>% summarise(mean_cost = mean(tot))
+ggplot(df1, mapping = aes(x = moa, y = mean_cost, color = provider)) + transition_reveal(moa) + geom_line() + ggtitle("Average Cost by Provider Over the Year") + labs(y= 'Average Cost of Stay in dollars', x = 'Month of Admission') + geom_text(aes(label = provider))
+```
+
+
+## Model 1
+```{r, fig.height= 4, fig.width=3}
+plot(tree_approach1)
+```
+
+
+## Model 2
+```{r, fig.height= 4, fig.width=3}
+plot(tree_approach2)
+```
+
+
+## Model 3
+```{r, fig.height= 4, fig.width=3}
+plot(tree_approach3)
+```
+
+
+## Best Model
+```{r, fig.height= 4, fig.width=3}
+fancyRpartPlot(tree2)
+cm$overall[1]
+```

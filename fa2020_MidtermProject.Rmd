@@ -2,7 +2,7 @@
 title: "Midterm Project"
 author: "Dan Barrett"
 date: "10/14/2020"
-output: ioslides_presentation
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -15,21 +15,99 @@ This is an R Markdown presentation. Markdown is a simple formatting syntax for a
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
 
-## Slide with Bullets
+## Part 1: Data Wranggling 
 
-- Bullet 1
-- Bullet 2
-- Bullet 3
-
-## Slide with R Output
-
-```{r cars, echo = TRUE}
-summary(cars)
+```{r}
+library(tidyverse)
+library(dplyr)
+df = read_csv('midterm.csv')
 ```
 
-## Slide with Plot
 
-```{r pressure}
-plot(pressure)
+```{r}
+colSums(is.na(df))
+df = subset(df, select = -c(payfix, admtype, asource, preopday, bwght, ecodub92, pt_state, diag_adm, er_mode, obs_hour, nicu_day))
+```
+
+Variable moa signals the month of admission & mod is the variable for month of discharge.
+
+```{r}
+df %>% count(moa)
+df %>% filter(sex == 1) %>% count(moa)
+df %>% filter((sex == 2) & (age >= 10) & (age <= 19)) %>% count(moa)
+df %>% filter((moa == 10) & (sex == 2)) %>% count(provider)
+```
+
+- October has the highest number of admissions with 11,408
+- October also had the highest number of male admissions with 5,164
+- May the highest number of teenage female patients with 270 admissions
+- Rhode Island Hospital (7205) had the most female patients in October with 1,517 female admissions
+
+```{r}
+df %>%group_by(sex) %>% summarise(mean = mean(age))
+df %>% group_by(moa) %>% summarise(mean = mean(age))
+df %>% group_by(provider) %>% summarise(mean = mean(tot))
+df %>% filter((sex == 1) & (age >= 10) & (age <= 19)) %>% group_by(provider) %>% summarise(mean = mean(tot))
+df %>% group_by(raceethn) %>% summarise(mean = mean(los))
+```
+
+- Female patients have a lower average age of 50.86 compared to the average age of male patients of 51.5
+- January had the oldest average patient admitted, the patients that month had an average age of 51.79
+- Bradley (7215) had the highest average total charge of $69,945.55
+- Rodger Williams (7206) had the lowest average charge for teenage male patients ($10,360.44)
+- Patients with the race American Indian had the longest average stay of 5.54 days compared to patients of other known races
+
+```{r}
+price <- df %>% filter((sex == 1) & (age == 20)) %>% summarise(mean = mean(tot))
+stay <- df %>% filter((sex == 1) & (age == 20)) %>% summarise(mean = mean(los))
+price / stay
+```
+
+-The average cost per day for a 20-year old male is $5,430.09 
+
+
+
+## Part 3: Predictive Modeling 
+```{r}
+library(caret)
+library(rattle)
+library(rpart)
+set.seed(2020)
+```
+
+```{r}
+df <- read_csv('midterm.csv')
+median_tot <- df %>% summarise(median = median(tot))
+df$target <- case_when(
+  df$tot <= 21854 ~ "low",
+  TRUE ~ "high"
+)
+df = subset(df, select = c(age, sex, raceethn, provider, moa, mod, admtype, campus, los, target))
+df$target <- factor(df$target)
+df$sex <- factor(df$sex)
+df$raceethn <- factor(df$raceethn)
+df$provider <- factor(df$provider)
+df$admtype <- factor(df$admtype)
+df$campus <- factor(df$campus)
+```
+
+
+
+```{r}
+splitIndex <- createDataPartition(df$target, p = .90, 
+                                  list = FALSE)
+df_train <- df[ splitIndex,]
+df_test <- df[-splitIndex,]
+tree1 <- rpart(target ~ ., data = df_train, control=rpart.control(maxdepth= 3))
+barplot(tree1$variable.importance)
+fancyRpartPlot(tree1)
+```
+
+
+```{r}
+tuneGrid = expand.grid(maxdepth = 1:10)
+trControl = trainControl(method ="cv",number =5)
+tree_approach2 <- train(target~., data=df_train,method ="rpart2",trControl =trControl, tuneGrid = tuneGrid)
+plot(tree_approach2)
 ```
 
