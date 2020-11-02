@@ -1,0 +1,273 @@
+
+---
+output: 
+  html_document:
+  pdf_document: default
+  word_document: default
+title: "Assignment 13: Writing a function - Conditional Statement"
+---
+
+***How to do it?***: 
+
+- Open the Rmarkdown file of this assignment ([link](fa2020_assignment13.Rmd)) in Rstudio. 
+
+- Right under each **question**, insert  a code chunk (you can use the hotkey `Ctrl + Alt + I` to add a code chunk) and code the solution for the question. 
+
+- `Knit` the rmarkdown file (hotkey: `Ctrl + Alt + K`) to export an html.  
+
+-  Publish the html file to your Github Page. 
+
+***Submission***: Submit the link on Github of the assignment to Blackboard.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE)
+```
+
+-------
+
+#### NOTICE: Question 7 and 8 are optional. 
+
+-------
+
+1. Write a function to calculate the age of a person.  Give an example to test your function. 
+
+- Input: a number, x, (year born)
+
+- Output: Print out "You are r age". Where r is the age of the person, i.e. 2020 - x. 
+
+Hint: [Similar Function](https://bryantstats.github.io/math421/gganimate/13_writing_functions.html#29)
+
+
+```{r}
+age_calc <- function(x)
+{
+  r <- 2020 - x
+  print(paste0('You are ', r, ' years old'))
+}
+```
+
+```{r}
+age_calc(1999)
+```
+
+-------
+
+2. Write the following function. Give an example to test your function. 
+
+- Input: a number
+
+- Output: print out: "You input an even number!" if the number is event, or "You input an odd number!" otherwise. 
+
+Hint: [Similar Function](https://bryantstats.github.io/math421/gganimate/13_writing_functions.html#33)
+
+```{r}
+even_odd <- function(x)
+{
+  if ((x %% 2) == 0)
+  {
+    print('Your number is even')
+  }
+  else
+  {
+    print("You've input an odd number")
+  }
+}
+```
+
+```{r}
+even_odd(7)
+```
+
+-------
+
+3. Write the following function.  Give an example to test your function. 
+
+- Input: a numeric vector 
+
+- Output:  
+
+  - if the input vector has missing values: return the input vector with missing values replaced by mean
+  
+  - if the input vector has no missing value: return the same input vector
+  
+Hint: [Similar Function](https://bryantstats.github.io/math421/gganimate/13_writing_functions.html#37)
+
+```{r}
+mean_replacement <- function(x)
+{
+  if (is.numeric(x))
+  {
+    mean_impute <- mean(x, na.rm=T)
+    library(tidyverse)
+    x <- replace_na(x, mean_impute)
+  }
+return(x)
+}
+```
+
+```{r}
+mean_replacement(c(1,2,3,4,5,6,7,8,NA,NA))
+```
+
+
+-------
+
+4. Write the following function.  Give an example to test your function. 
+
+- Input: a vector x 
+
+- Output:  The vector x where the missing values replaced by the mean (if x is numeric) or the mode (if x is non-numeric).  If x does not have missing value, return the same vector x.  
+
+Hint: Combine the function in Question 3 and [this function](https://bryantstats.github.io/math421/gganimate/13_writing_functions.html#37)
+
+```{r}
+replacement2 <- function(x)
+{
+   if (is.numeric(x))
+  {
+    mean_impute <- mean(x, na.rm=T)
+    library(tidyverse)
+    x <- replace_na(x, mean_impute)
+   }
+  else
+  {
+    mode_replace <- names(sort(-table(x)))[1]
+    x <- replace_na(x, mode_replace)
+  }
+return(x)
+}
+```
+
+
+```{r}
+library(tidyverse)
+df <- read_csv('titanic.csv')
+replacement2(df$Age)
+replacement2(df$Embarked)
+```
+
+-------
+
+5. Write the following function. Give examples to test your function. 
+
+- Input: A data frame of two variables x and y
+
+- Output: 
+
+  - A boxplot of x by y if x is numeric and y is non-numeric
+ 
+  - A boxplot of y by x if y is numeric and x is non-numeric
+ 
+  - print out 'This function cannot visualize your data' otherwise
+
+Hint: 
+
+- [Similar Function](https://bryantstats.github.io/math421/gganimate/13_writing_functions.html#41)
+ 
+- You can refer to this slide to plot a boxplot: https://bryantstats.github.io/math421/slides/6_viz.html#36
+
+```{r}
+plot_generate <- function(d)
+{
+  if(is.numeric(d[[1]])|!is.numeric(d[[2]]))
+  {
+    d %>% ggplot(aes(x = d[[2]], y = d[[1]]))+
+      geom_boxplot()+
+      labs(x = names(d)[2], fill = names(d)[1])
+  }
+  else if (!(is.numeric(d[[1]])|is.numeric(d[[2]])))
+  {
+    d %>% ggplot(aes(x = d[[1]], fill = d[[2]]))+
+      geom_boxplot()+
+      labs(x = names(d)[1], fill = names(d)[2])
+  }
+  else 
+  {
+    print('This function cannot visualize your data.')
+  }
+}
+```
+
+
+```{r}
+d <- df %>% select(Age, Sex)
+plot_generate(d)
+```
+ 
+-------
+ 
+6. Combine the function in Question 5 and the function in this example ([Link](https://bryantstats.github.io/math421/gganimate/13_writing_functions.html#41)) to have a function that can plot all possible cases (2 categorical, 2 numeric, 1 numeric and 1 categorical). 
+
+```{r}
+advanced_plot <- function(d)
+{
+  if((is.numeric(d[[1]])&is.numeric(d[[2]])))
+  {
+       d %>% ggplot(aes(x = d[[1]], y = d[[2]]))+
+      geom_point(position = 'jitter')+
+      labs(x = names(d)[1], y = names(d)[2])
+  }
+  else if(!is.numeric(d[[1]]) & !is.numeric(d[[2]]))
+  {
+    d %>% ggplot(aes(x = d[[1]], fill = d[[2]]))+
+    geom_bar(position = 'dodge')+
+    labs(x = names(d)[1], fill = names(d)[2]) 
+  }
+  else if(is.numeric(d[[1]])& !is.numeric(d[[2]]))
+  {
+    d %>% ggplot(aes(x = d[[2]], y = d[[1]]))+
+      geom_boxplot()+
+      labs(x = names(d)[2], fill = names(d)[1])
+  }
+  else
+  {
+    d %>% ggplot(aes(x = d[[1]], fill = d[[2]]))+
+      geom_boxplot()+
+      labs(x = names(d)[1], fill = names(d)[2])
+  }
+
+}
+```
+
+
+```{r}
+df$Pclass <- factor(df$Pclass)
+d <- df %>% select(Age, Sex)
+e <- df %>% select(Age, Fare)
+f <- df %>% select(Sex, Pclass)
+advanced_plot(d)
+advanced_plot(e)
+advanced_plot(f)
+```
+
+-------
+
+#### NOTICE: Question 7 and 8 are optional. 
+
+-------
+
+7. Write the following function. Give examples to test your function. 
+
+- Input: 
+
+  - input_data: a clean data frame with a variable name `target`. The `target` variable is also binary. 
+  
+  - train_percent: a number presenting a proportion of training data. The default train_percent is .8
+
+- Output: the accuracy of the decision model `rpart` where the training data is train_percent. 
+
+-------
+
+8. Write the following function. Give examples to test your function. 
+
+- Input: 
+
+  - input_data: a clean data frame with a variable name `target`. The `target` variable is also binary. 
+  
+  - train_percent: a number presenting a proportion of training data. The default train_percent is .8
+
+- Output: the plot of variable important by random forest trained by caret. 
+
+
+
+

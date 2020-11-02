@@ -2,7 +2,9 @@
 title: "Midterm Presentation"
 author: "Dan Barrett"
 date: "10/21/2020"
-output: ioslides_presentation
+output:
+  slidy_presentation: default
+  ioslides_presentation: default
 ---
 
 ```{r setup, include=FALSE}
@@ -20,6 +22,10 @@ library(tidyverse)
 library(ggplot2)
 library(gganimate)
 library(gifski)
+library(rattle)
+library(e1071)
+library(rpart)
+library(caret)
 df = read_csv('midterm.csv')
 ```
 
@@ -85,33 +91,109 @@ df %>% group_by(payer) %>% summarise(mean_los = mean(los)) %>% ggplot() + geom_c
 
 
 ## Plot 11 / Animation
-```{r, fig.height= 4, fig.width=3}
+```{r, fig.height= 4, fig.width=5}
 df$provider <- factor(df$provider)
 df1 <- df %>% group_by(moa, provider) %>% summarise(mean_cost = mean(tot))
 ggplot(df1, mapping = aes(x = moa, y = mean_cost, color = provider)) + transition_reveal(moa) + geom_line() + ggtitle("Average Cost by Provider Over the Year") + labs(y= 'Average Cost of Stay in dollars', x = 'Month of Admission') + geom_text(aes(label = provider))
 ```
 
 
-## Model 1
-```{r, fig.height= 4, fig.width=3}
-plot(tree_approach1)
+
+```{r}
+mysample <- df[sample(1:nrow(df), 2000,
+   replace=FALSE),]
+median_tot <- df %>% summarise(median = median(tot))
+mysample$target <- case_when(
+  mysample$tot <= 21854 ~ "low",
+  TRUE ~ "high"
+)
+df = subset(mysample, select = c(age, sex, raceethn, provider, moa, mod, admtype, campus, los, target))
+df$target <- factor(df$target)
+df$sex <- factor(df$sex)
+df$raceethn <- factor(df$raceethn)
+df$provider <- factor(df$provider)
+df$admtype <- factor(df$admtype)
+df$campus <- factor(df$campus)
+df <- df %>% na.omit((df$raceethn) | (df$admtype))
+splitIndex <- createDataPartition(df$target, p = .90, 
+                                  list = FALSE)
+df_train <- df[ splitIndex,]
+df_test <- df[-splitIndex,]
+tuneGrid = expand.grid(maxdepth = 1:10)
+trControl = trainControl(method ="cv",number =5)
+tree_approach1 <- train(target~., data=df_train ,method ="rpart2",trControl =trControl, tuneGrid = tuneGrid)
+tuneGrid = expand.grid(nIter =2:10, method='cv')
+trControl = trainControl(method ="cv",number =5)
+tree_approach2 <- train(target~., data=df_train ,method ="adaboost",trControl =trControl, tuneGrid = tuneGrid)
+tuneGrid = expand.grid(mtry = 2:5)
+trControl = trainControl(method ="cv",number =5)
+tree_approach3 <- train(target~., data=df_train ,method ="rf",trControl =trControl, tuneGrid = tuneGrid)
+model_accuracy <- resamples(list(adaboost = tree_approach2,
+                                 forest = tree_approach3,
+                                 tree = tree_approach1))
 ```
 
 
-## Model 2
-```{r, fig.height= 4, fig.width=3}
-plot(tree_approach2)
-```
 
 
-## Model 3
-```{r, fig.height= 4, fig.width=3}
-plot(tree_approach3)
+## Comparing Accuracy
+-Random Forest performs the best 
+
+```{r}
+bwplot(model_accuracy)
 ```
+
 
 
 ## Best Model
-```{r, fig.height= 4, fig.width=3}
-fancyRpartPlot(tree2)
+```{r, fig.height= 4, fig.width=6}
+tree1 <- rpart(target ~.,data = df_train,control=rpart.control(maxdepth=5))
+fancyRpartPlot(tree1)
+pred <- predict(tree_approach1, df_test, type = "raw")
+cm <- confusionMatrix(data = pred, reference = df_test$target, positive = "high")
 cm$overall[1]
 ```
+
+
+
+
+## Predicting Length of Stay
+```{r}
+df <- read_csv('midterm.csv')
+df <- df[sample(1:nrow(df), 2000,
+   replace=FALSE),]
+median_los <- df %>% summarise(median = median(los))
+df$target <- case_when(
+  df$los <= 4 ~ "short",
+  TRUE ~ "long"
+)
+df = subset(df, select = c(age, sex, raceethn, provider, moa, mod, admtype, campus, tot, target))
+df$target <- factor(df$target)
+df$sex <- factor(df$sex)
+df$raceethn <- factor(df$raceethn)
+df$provider <- factor(df$provider)
+df$admtype <- factor(df$admtype)
+df$campus <- factor(df$campus)
+df <- df %>% na.omit((df$raceethn) | (df$admtype))
+splitIndex <- createDataPartition(df$target, p = .90, 
+                                  list = FALSE)
+df_train <- df[ splitIndex,]
+df_test <- df[-splitIndex,]
+tuneGrid = expand.grid(maxdepth = 1:10)
+trControl = trainControl(method ="cv",number =5)
+tree_approach4 <- train(target~., data=df_train ,method ="rpart2",trControl =trControl, tuneGrid = tuneGrid)
+```
+
+
+
+
+## Model Predicting Lenght of Stay
+```{r}
+tree3 <- rpart(target ~.,data = df_train,control=rpart.control(maxdepth=4))
+pred <- predict(tree3, df_test, type = "class")
+cm2 <- confusionMatrix(data = pred, reference = df_test$target, positive = "long")
+fancyRpartPlot(tree3)
+cm2$overall[1]
+```
+
+

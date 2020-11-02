@@ -77,18 +77,21 @@ set.seed(2020)
 
 ```{r}
 df <- read_csv('midterm.csv')
+mysample <- df[sample(1:nrow(df), 2000,
+   replace=FALSE),]
 median_tot <- df %>% summarise(median = median(tot))
-df$target <- case_when(
-  df$tot <= 21854 ~ "low",
+mysample$target <- case_when(
+  mysample$tot <= 21854 ~ "low",
   TRUE ~ "high"
 )
-df = subset(df, select = c(age, sex, raceethn, provider, moa, mod, admtype, campus, los, target))
+df = subset(mysample, select = c(age, sex, raceethn, provider, moa, mod, admtype, campus, los, target))
 df$target <- factor(df$target)
 df$sex <- factor(df$sex)
 df$raceethn <- factor(df$raceethn)
 df$provider <- factor(df$provider)
 df$admtype <- factor(df$admtype)
 df$campus <- factor(df$campus)
+df <- df %>% na.omit((df$raceethn) | (df$admtype))
 ```
 
 
@@ -104,10 +107,86 @@ fancyRpartPlot(tree1)
 ```
 
 
+
+
 ```{r}
 tuneGrid = expand.grid(maxdepth = 1:10)
 trControl = trainControl(method ="cv",number =5)
-tree_approach2 <- train(target~., data=df_train,method ="rpart2",trControl =trControl, tuneGrid = tuneGrid)
+tree_approach1 <- train(target~., data=df_train ,method ="rpart2",trControl =trControl, tuneGrid = tuneGrid)
+plot(tree_approach1)
+```
+
+
+
+```{r}
+tuneGrid = expand.grid(nIter =2:10, method='cv')
+trControl = trainControl(method ="cv",number =5)
+tree_approach2 <- train(target~., data=df_train ,method ="adaboost",trControl =trControl, tuneGrid = tuneGrid)
 plot(tree_approach2)
 ```
+
+
+
+```{r}
+tuneGrid = expand.grid(mtry = 2:5)
+trControl = trainControl(method ="cv",number =5)
+tree_approach3 <- train(target~., data=df_train ,method ="rf",trControl =trControl, tuneGrid = tuneGrid)
+plot(tree_approach3)
+```
+
+```{r}
+model_accuracy <- resamples(list(adaboost = tree_approach2,
+                                 forest = tree_approach3,
+                                 tree = tree_approach1))
+```
+
+
+
+```{r}
+library(e1071)
+tree_model <- rpart(target ~ ., data = df_train, control = rpart.control(maxdepth = 5))
+pred <- predict(tree_approach1, df_test, type = "raw")
+cm <- confusionMatrix(data = pred, reference = df_test$target, positive = "high")
+cm$overall[1]
+```
+
+
+
+## Lenght of Stay Model Prediction
+```{r}
+df <- read_csv('midterm.csv')
+median_tot <- df %>% summarise(median = median(tot))
+df$target <- case_when(
+  df$los <= 4 ~ "short",
+  TRUE ~ "long"
+)
+df = subset(df, select = c(age, sex, raceethn, provider, moa, mod, admtype, campus, tot, target))
+df$target <- factor(df$target)
+df$sex <- factor(df$sex)
+df$raceethn <- factor(df$raceethn)
+df$provider <- factor(df$provider)
+df$admtype <- factor(df$admtype)
+df$campus <- factor(df$campus)
+df <- df %>% na.omit((df$raceethn) | (df$admtype))
+```
+
+
+```{r}
+splitIndex <- createDataPartition(df$target, p = .90, 
+                                  list = FALSE)
+df_train <- df[ splitIndex,]
+df_test <- df[-splitIndex,]
+tuneGrid = expand.grid(maxdepth = 1:10)
+trControl = trainControl(method ="cv",number =5)
+tree_approach4 <- train(target~., data=df_train ,method ="rpart2",trControl =trControl, tuneGrid = tuneGrid)
+plot(tree_approach4)
+```
+
+```{r}
+tree3 <- rpart(target ~.,data = df_train,control=rpart.control(maxdepth=4))
+pred <- predict(tree3, df_test, type = "class")
+cm2 <- confusionMatrix(data = pred, reference = df_test$target, positive = "long")
+cm2$overall[1]
+```
+
 
