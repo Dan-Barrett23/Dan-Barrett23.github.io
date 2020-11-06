@@ -22,6 +22,34 @@ title: "Assignment 14: Writing a function - Loop"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(message = FALSE)
 ```
+```{r}
+mean_replacement <- function(x)
+{
+  if (is.numeric(x))
+  {
+    mean_impute <- mean(x, na.rm=T)
+    library(tidyverse)
+    x <- replace_na(x, mean_impute)
+  }
+return(x)
+}
+
+replacement2 <- function(x)
+{
+   if (is.numeric(x))
+  {
+    mean_impute <- mean(x, na.rm=T)
+    library(tidyverse)
+    x <- replace_na(x, mean_impute)
+   }
+  else
+  {
+    mode_replace <- names(sort(-table(x)))[1]
+    x <- replace_na(x, mode_replace)
+  }
+return(x)
+}
+```
 
 -------
 
@@ -33,6 +61,23 @@ knitr::opts_chunk$set(message = FALSE)
 
 Hint: [Similar function](https://bryantstats.github.io/math421/gganimate/14_writing_functions.html#28)
 
+```{r}
+imputation <- function(x)
+{
+  for (i in 1:length(x))
+  {
+    df[[i]] <- mean_replacement(df[[i]])
+  }
+  return(df)
+}
+```
+
+```{r}
+library(tidyverse)
+df <- read_csv('titanic.csv')
+imputation(df)
+```
+
 -------
 
 2. Write the following function. Give examples to test your function.
@@ -43,6 +88,20 @@ Hint: [Similar function](https://bryantstats.github.io/math421/gganimate/14_writ
 
 Hint: Combine the function in Problem 1 and the function in [this example](https://bryantstats.github.io/math421/gganimate/14_writing_functions.html#28)
 
+```{r}
+imputation_V2 <- function(x)
+{
+  for (i in 1:length(x))
+  {
+    df[[i]] <- replacement2(df[[i]])
+  }
+ return(df)
+}
+```
+
+```{r}
+imputation_V2(df)
+```
 
 -------
 
@@ -54,6 +113,25 @@ Hint: Combine the function in Problem 1 and the function in [this example](https
 
 Hint: [Similar function](https://bryantstats.github.io/math421/gganimate/14_writing_functions.html#32)
 
+```{r}
+bar_plot <- function(x)
+{
+  library(ggplot2)
+  for (i in 1:length(x))
+  {
+    if (!is.numeric(df[[i]]))
+    {
+      print(ggplot(df, aes(x = df[[i]]))+ 
+              geom_bar()+
+              labs(x = names(df)[i]))
+    }
+  }
+}
+```
+
+```{r}
+bar_plot(df)
+```
 
 -------
 
@@ -64,6 +142,27 @@ Hint: [Similar function](https://bryantstats.github.io/math421/gganimate/14_writ
 - Output: all possible the bar plots of a non-numeric variable filled by a non-numeric variable.
 
 Hint: [Similar function](https://bryantstats.github.io/math421/gganimate/14_writing_functions.html#40)
+
+```{r}
+bar_plot2 <- function(x)
+{
+  l <- length(x)
+  for (i in 1:(l-1))
+    for (j in (i+1):l)
+  {
+    if (!is.numeric(df[[i]])&!is.numeric(df[[j]]))
+    {
+      print(ggplot(df, aes(x = df[[i]], fill = df[[j]]))+ 
+              geom_bar()+
+              labs(x = names(df)[i], fill = names(df)[j]))
+    }
+  }
+}
+```
+
+```{r}
+bar_plot2(df)
+```
 
 -------
 
@@ -80,4 +179,49 @@ Hint: [Similar function](https://bryantstats.github.io/math421/gganimate/14_writ
   - all possible the scatter plots.
 
 Hint: Combine [this function](https://bryantstats.github.io/math421/gganimate/14_writing_functions.html#36), [this function](https://bryantstats.github.io/math421/gganimate/14_writing_functions.html#39), and the function in Question 4. One way to combine is creating a new function, `quick_plot`, and call these three functions within `quic_kplot`. 
+
+```{r}
+density_plot <- function(x)
+{
+  l <- length(x)
+  for (i in 1:(l-1))
+    for (j in (i+1):l)
+  {
+    if (is.numeric(df[[i]])&!is.numeric(df[[j]]))
+    {
+      print(ggplot(df, aes(x = df[[i]], fill = df[[j]]))+ 
+              geom_bar()+
+              labs(x = names(df)[i], fill = names(df)[j]))
+    }
+  }
+}
+
+scatter_plot <- function(x)
+{
+  l <- length(x)
+  for (i in 1:(l-1))
+    for (j in (i+1):l)
+  {
+    if (is.numeric(df[[i]])&is.numeric(df[[j]]))
+    {
+      print(ggplot(df, aes(x = df[[i]], y = df[[j]]))+ 
+              geom_point()+
+              labs(x = names(df)[i], y = names(df)[j]))
+    }
+  }
+}
+```
+
+```{r}
+quickplot <- function(x)
+{
+  density_plot(x)
+  scatter_plot(x)
+  bar_plot(x)
+}
+```
+
+```{r}
+quickplot(df)
+```
 
