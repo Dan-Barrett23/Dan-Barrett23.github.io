@@ -1,0 +1,211 @@
+---
+title: "Final Project"
+author: "Dan Barrett"
+date: "11/23/2020"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+Question 9
+
+```{r}
+library(tidyverse)
+library(shiny)
+library(lubridate)
+
+d = read_csv('all-states-history.csv')
+
+variables_names = names(d)
+
+d$date <- ymd(d$date)
+
+d <- filter(d, (d$state == 'CA')|(d$state == 'MA')|(d$state == 'FL')|(d$state == 'TX')|(d$state == 'OH')|(d$state == 'NY'))
+
+
+ui <- fluidPage(
+  
+  titlePanel("Covid 19 by Data"),
+  
+  sidebarLayout(
+    
+    sidebarPanel(
+      
+      
+      checkboxGroupInput(inputId = "state_selection", label = "Select State to Compare",
+                       choices = names(table(d$state)), inline = TRUE),
+            
+      selectInput(
+        inputId ="var1",
+        label = "Select a Numeric Variables",
+        choices = variables_names, selected = "positive"
+      ),
+    
+      sliderInput(inputId = "date",
+                  "Select Date Range:",
+                  min = as.Date(min(d$date, na.rm=TRUE)),
+                  max = as.Date(max(d$date, na.rm=TRUE)),
+                  value= as.Date(c('2020-05-22','2020-05-23'))),
+    
+      radioButtons(inputId = "plot_choice", 
+             label = h3("Select Plot Type:"),
+             choices = c("Line Plot" = "line",
+               "Point Plot" = "scatter"),
+             selected = 'line')
+    ),
+    
+    # Main panel for displaying outputs ----
+    mainPanel(
+      
+      # Output: Histogram ----
+      
+      plotOutput(outputId = 'show_plot')
+    )
+  )
+)
+
+
+# server is a function! 
+server <- function(input, output) {
+  
+  
+  output$show_plot <- renderPlot({
+    
+    v1 = input$var1
+   
+    d <- d %>% filter(state %in% input$state_selection)
+    d <- d %>% filter(date>input$date[1], date<input$date[2])
+    date <- input$date
+    state <- input$state_selections
+    
+    library(ggplot2)
+    
+    if(input$plot_choice == 'line')
+      
+    {
+      ggplot(d, aes(y = d[[v1]], x= date, color = state))+
+        geom_line()+
+        labs(y = v1, x = 'Date', color = state)
+    }
+    
+    else
+    {
+      ggplot(d, aes(y= d[[v1]], x= date, color = state))+
+        geom_point()+
+        labs(y = v1, x = 'Date', color = state)
+    }
+    
+  })
+  
+}
+# app
+shinyApp(ui = ui, server = server)
+```
+
+
+
+Question 10
+
+```{r}
+library(tidyverse)
+library(shiny)
+library(lubridate)
+
+d = read_csv('all-states-history.csv')
+
+d$date <- ymd(d$date)
+d <- filter(d, (d$state == 'CA')|(d$state == 'IL')|(d$state == 'LA')|(d$state == 'AZ')|(d$state == 'ND')|(d$state == 'NY'))
+
+d$fatality <- (d$deathIncrease/d$positiveIncrease)
+
+variables_names = names(d)
+
+ui <- fluidPage(
+  
+  titlePanel("Covid 19 by Data"),
+  
+  sidebarLayout(
+    
+    sidebarPanel(
+      
+      
+      checkboxGroupInput(inputId = "state_selection", label = "Select State to Compare",
+                       choices = names(table(d$state)), inline = TRUE),
+            
+      selectInput(
+        inputId ="var1",
+        label = "Select a Numeric Variables",
+        choices = variables_names, selected = "fatality"
+      ),
+    
+      sliderInput(inputId = "date",
+                  "Select Date Range:",
+                  min = as.Date(min(d$date, na.rm=TRUE)),
+                  max = as.Date(max(d$date, na.rm=TRUE)),
+                  value= as.Date(c('2020-05-22','2020-05-23'))),
+    
+      radioButtons(inputId = "plot_choice", 
+             label = h3("Select Plot Type:"),
+             choices = c("Smooth Plot" = "smooth",
+               "Point Plot" = "point"),
+             selected = 'smooth')
+    ),
+    
+    # Main panel for displaying outputs ----
+    mainPanel(
+      
+      # Output: Histogram ----
+      
+      plotOutput(outputId = 'show_plot')
+    )
+  )
+)
+
+
+# server is a function! 
+server <- function(input, output) {
+  
+  
+  output$show_plot <- renderPlot({
+    
+    v1 = input$var1
+   
+    d <- d %>% filter(state %in% input$state_selection)
+    d <- d %>% filter(date>input$date[1], date<input$date[2])
+    date <- input$date
+    state <- input$state_selections
+    
+    library(ggplot2)
+    
+    if(input$plot_choice == 'smooth')
+      
+    {
+      ggplot(d, aes(y = d[[v1]], x= date, color = state))+
+        geom_smooth()+
+        labs(y = v1, x = 'Date', color = state)
+    }
+    
+    else
+    {
+      ggplot(d, aes(y= d[[v1]], x= date, color = state))+
+        geom_point()+
+        labs(y = v1, x = 'Date', color = state)
+    }
+    
+  })
+  
+}
+# app
+shinyApp(ui = ui, server = server)
+```
+
